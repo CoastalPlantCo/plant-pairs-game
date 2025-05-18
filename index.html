@@ -422,30 +422,26 @@
       document.getElementById("player-name-input").value = `${a}${n}${num}`;
     }
 
-    async function submitScore(name, score, email, optedIn) {
+async function submitScore(name, score, email, optedIn) {
   currentPlayerName = name;
   try {
     const resp = await fetch(LEADERBOARD_URL, {
       method: "POST",
       mode: "cors",
-      headers: { "Content-Type": "application/json" },
+      // no custom headers = a “simple” request, no preflight
       body: JSON.stringify({ name, score, email, optedIn }),
     });
-    if (!resp.ok) {
-      // log HTTP error code for debugging
-      console.error("Submit failed:", resp.status, resp.statusText);
-      throw new Error(`Server returned ${resp.status}`);
-    }
+    if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
     openPopup("submit-confirmation-popup");
   } catch (err) {
     console.error("Submission error:", err);
-    // show a more helpful error message
     document
       .querySelector("#submit-error-popup p")
       .textContent = `Submission failed: ${err.message}. Please check your network or try again.`;
     openPopup("submit-error-popup");
   }
 }
+
 
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("start-button").onclick = startGame;
