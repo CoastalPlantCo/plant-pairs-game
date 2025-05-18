@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Plant Pairs | Coastal Plant Company</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --brand-bg: #fbf7ea;
+      --brand-text: #0a4d4d;
+      --popup-shadow: rgba(0,0,0,0.3);
+    }
+    body {
+      margin: 0;
+      font-family: 'Helvetica Neue', sans-serif;
+      background: var(--brand-bg);
+      color: var(--brand-text);
+      text-align: center;
+    }
+    .hidden { display: none; }
+    .popup {
+      position: fixed; top:50%; left:50%;
+      transform: translate(-50%,-50%) scale(0.9);
+      z-index: 9999;
+      background: #fff;
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 20px 40px var(--popup-shadow);
+      opacity: 0;
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+      width: 90%; max-width: 400px;
+    }
+    .popup.show {
+      transform: translate(-50%,-50%) scale(1);
+      opacity: 1;
+    }
+    .popup .close-btn {
+      position: absolute; top: 1rem; right: 1rem;
+      font-size: 1.4rem; font-weight: bold;
+      background: none; border: none;
+      color: var(--brand-text);
+      cursor: pointer;
+    }
+    .popup h3 { margin-top: 0; font-size: 1.5rem; }
+    .spinner {
+      margin: 1rem auto; width: 40px; height: 40px;
+      border: 4px solid var(--brand-text);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    button {
+      background: var(--brand-text);
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border: none; border-radius: 0.5rem;
+      font-size: 1rem; cursor: pointer;
+      margin: 0.5rem;
+      box-shadow: 0 4px 8px var(--popup-shadow);
+      transition: transform 0.2s;
+    }
+    button:hover { transform: scale(1.05); }
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(6,1fr);
+      gap: 20px;
+      justify-content: center;
+      margin: 3rem auto;
+      padding: 0 1rem;
+      max-width: 1080px;
+    }
+    @media(max-width:768px){
+      #game-board {
+        grid-template-columns: repeat(3,1fr);
+        gap: 12px; max-width: 360px; padding: 0;
+      }
+    }
+    .card {
+      perspective: 1000px;
+      width: 100%; aspect-ratio: 1/1;
+      overflow: hidden;
+    }
+    .card-inner {
+      width: 100%; height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      position: relative;
+    }
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card .front, .card .back {
+      position: absolute; width: 100%; height: 100%;
+      backface-visibility: hidden;
+      background-size: cover; background-position: center;
+      border-radius: 1.5rem;
+    }
+    .card .front { transform: rotateY(180deg); z-index: 2; }
+    .card .back  { transform: rotateY(0deg);   z-index: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- Title Screen -->
+  <div id="title-screen">
+    <img src="https://cdn.shopify.com/s/files/1/0593/3731/0342/files/PlantPairs.png?v=1744773485"
+         alt="Plant Pairs Logo"
+         style="max-width:360px;margin:2rem auto;display:block;" />
+    <h2 style="margin:0.5rem 0;">Match the pairs to win!</h2>
+    <p style="margin:0.5rem 0;">Test your memory. Earn points. Climb the leaderboard!</p>
+    <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:1rem;margin-top:1rem;">
+      <button id="start-button">Start Game</button>
+      <button id="title-howto">How to Play</button>
+      <a href="https://www.coastalplantcompany.com" target="_blank">
+        <button>Visit Our Shop</button>
+      </a>
+    </div>
+  </div>
+
+  <!-- Game Container -->
+  <div id="game-container" class="hidden">
+    <div style="margin-top:1rem;font-size:1.25rem;font-weight:bold;">
+      Score: <span id="score">0</span> |
+      Streak: <span id="streak">0</span> |
+      Misses: <span id="misses">0</span> |
+      Matches: <span id="matched">0</span> |
+      Time: <span id="elapsed">0</span>s
+    </div>
+    <div id="game-board"></div>
+    <div style="margin-top:2rem;">
+      <button id="restart-button">Restart Game</button>
+      <button id="game-howto">How to Play</button>
+      <button id="leaderboard-button">View Leaderboard</button>
+      <a href="https://www.coastalplantcompany.com" target="_blank">
+        <button>Visit Our Shop</button>
+      </a>
+    </div>
+  </div>
+
+  <!-- How to Play Popup -->
+  <div id="howtoplay-popup" class="popup hidden">
+    <button class="close-btn" onclick="closeAllPopups()">&times;</button>
+    <h3>How to Play</h3>
+    <ul style="text-align:left; list-style:disc inside; margin:1rem 0;">
+      <li>Flip two cards to find a matching pair.</li>
+      <li>The game ends once all pairs are matched.</li>
+      <li>Avoid mismatches to keep your streak bonus.</li>
+      <li>Finish quickly to maximize your time bonus.</li>
+    </ul>
+    <h4 style="margin-top:1rem;text-align:left;">Scoring:</h4>
+    <ul style="text-align:left; list-style:disc inside; margin:0 0 1rem;">
+      <li><strong>Match found:</strong> +100 points</li>
+      <li><strong>Streak bonus:</strong> +25 per consecutive match</li>
+      <li><strong>Mismatch:</strong> −20 points</li>
+      <li><strong>Time bonus:</strong> Starts at 900, −3 per second</li>
+    </ul>
+    <button onclick="closeAllPopups()">Close</button>
+  </div>
+
+  <!-- Loading Popup -->
+  <div id="loading-popup" class="popup hidden">
+    <div class="spinner"></div>
+    <p>Loading leaderboard...</p>
+  </div>
+
+  <!-- Leaderboard Popup -->
+  <div id="leaderboard-popup" class="popup hidden">
+    <button class="close-btn" onclick="closeAllPopups()">&times;</button>
+    <h3>Leaderboard</h3>
+    <div id="leaderboard-entries" style="margin-top:1rem;"></div>
+    <button onclick="closeAllPopups()">Close</button>
+  </div>
+
+  <!-- You Win Popup -->
+  <div id="win-popup" class="popup hidden">
+    <button class="close-btn" onclick="closeAllPopups()">&times;</button>
+    <h3>You Win!</h3>
+    <p>Your Score: <span id="final-score">0</span></p>
+    <p id="breakdown" style="white-space:nowrap;font-weight:bold;">
+      Matches: <span id="final-matches"></span> |
+      Streak: <span id="final-streak"></span> |
+      Misses: <span id="final-misses"></span> |
+      Time: <span id="final-time"></span>s
+    </p>
+    <div style="display:flex;gap:0.5rem;align-items:center;margin-top:1rem;">
+      <input id="player-name-input" type="text"
+             placeholder="Your name or nickname"
+             style="flex:1;padding:0.5rem;" />
+      <button id="generate-name-button" style="padding:0.5rem;font-size:0.9rem;">
+        Generate Random Name
+      </button>
+    </div>
+    <input id="player-email-input" type="email"
+           placeholder="Your email (for prize notifications & exclusive offers)"
+           style="width:100%;padding:0.5rem;margin:0.5rem 0;" />
+    <label style="display:block;margin-bottom:1rem;">
+      <input id="optin-checkbox" type="checkbox" />
+      Sign me up to receive promotions, care tips & more!
+    </label>
+    <button id="submit-score-button">Submit Score</button>
+    <button onclick="startGame()">Play Again</button>
+    <a href="https://www.coastalplantcompany.com" target="_blank">
+      <button>Visit Our Shop</button>
+    </a>
+  </div>
+
+  <!-- Submission Confirmation -->
+  <div id="submit-confirmation-popup" class="popup hidden">
+    <button class="close-btn" onclick="closeAllPopups()">&times;</button>
+    <h3>Score Submitted!</h3>
+    <p>Your score has been added to the leaderboard.</p>
+    <button onclick="openPopup('leaderboard-popup')">View Leaderboard</button>
+    <button onclick="closeAllPopups()">Close</button>
+  </div>
+
+  <!-- Submission Error -->
+  <div id="submit-error-popup" class="popup hidden">
+    <button class="close-btn" onclick="closeAllPopups()">&times;</button>
+    <h3>Submission Failed</h3>
+    <p>We couldn't submit your score. Please check your network and try again.</p>
+    <button onclick="closeAllPopups()">Close</button>
+  </div>
+
+  <script>
+    const LEADERBOARD_URL =
+      "https://script.google.com/macros/s/AKfycbwnM9-OyorBBSPJJA80GrWMRMSh1FTM0mJPHR2uJeMgqvslYR4AoInELwv09Qe2fdo5/exec";
+
+    // 19 versioned front-card URLs
+    const images = [
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_1.jpg?v=1744695948",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_2.jpg?v=1744695919",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_3.jpg?v=1744695892",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_4.jpg?v=1744695856",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_5.jpg?v=1744695804",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_6.jpg?v=1744695873",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_7.jpg?v=1744695825",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_8.jpg?v=1744695840",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_9.jpg?v=1745449640",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_10.jpg?v=1746514090",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_11.jpg?v=1746514261",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_12.jpg?v=1746514463",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_13.jpg?v=1746514507",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_14.jpg?v=1746514711",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_15.jpg?v=1746514739",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_16.jpg?v=1746514762",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_17.jpg?v=1746514783",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_18.png?v=1746514796",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_19.png?v=1746514816"
+    ];
+
+    const adjectives = ["Sunny","Misty","Rustic","Emerald","Silver","Golden","Velvet","Silent","Whispering","Verdant","Autumn","Blossom","Crisp","Dewy","Jade","Leafy","Mossy","Petal","Quaint","Thorny","Willow","Xanadu","Yellow","Zesty","Bloom"];
+    const nouns      = ["Fern","Orchid","Ivy","Maple","Cactus","Pine","Willow","Birch","Rose","Lotus","Dahlia","Bamboo","Cedar","Elm","Fuchsia","Gardenia","Holly","Jasmine","Lilac","Magnolia","Nectar","Opal","Palm","Quince","Reed"];
+
+    let flippedCards = [], matched = 0, score = 0, streak = 0, misses = 0;
+    let startTime = null, timer = null, currentPlayerName = null;
+
+    function shuffle(a) {
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+    }
+
+    function closeAllPopups() {
+      document.querySelectorAll('.popup').forEach(p => p.classList.remove('show'));
+      document.querySelectorAll('.popup').forEach(p => p.classList.add('hidden'));
+    }
+
+    function openPopup(id) {
+      const p = document.getElementById(id);
+      p.classList.remove('hidden');
+      p.classList.add('show');
+    }
+
+    function initGame() {
+      const selected = [];
+      while (selected.length < 9) {
+        const idx = Math.floor(Math.random() * images.length);
+        const img = images[idx];
+        if (!selected.includes(img)) selected.push(img);
+      }
+      const deck = [];
+      selected.forEach(img => deck.push(img, img));
+      shuffle(deck);
+
+      flippedCards = [];
+      matched = 0;
+      score = 0;
+      streak = 0;
+      misses = 0;
+      document.getElementById("elapsed").textContent = "0";
+      updateStats();
+
+      const board = document.getElementById("game-board");
+      board.innerHTML = "";
+      deck.forEach(img => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.image = img;
+        card.innerHTML = `
+          <div class="card-inner">
+            <div class="front" style="background-image:url('${img}');"></div>
+            <div class="back"  style="background-image:url('https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_back.jpg?v=1744647556');"></div>
+          </div>`;
+        card.addEventListener("click", () => flipCard(card));
+        board.appendChild(card);
+      });
+    }
+
+    function startGame() {
+      if (timer) clearInterval(timer);
+      startTime = null;
+      document.getElementById("elapsed").textContent = "0";
+      closeAllPopups();
+      document.getElementById("title-screen").classList.add("hidden");
+      document.getElementById("game-container").classList.remove("hidden");
+      initGame();
+    }
+
+    function flipCard(card) {
+      if (!startTime) {
+        startTime = Date.now();
+        timer = setInterval(() => {
+          document.getElementById("elapsed").textContent =
+            Math.floor((Date.now() - startTime) / 1000);
+        }, 1000);
+      }
+      if (flippedCards.length < 2 && !flippedCards.includes(card)) {
+        card.classList.add("flipped");
+        flippedCards.push(card);
+        if (flippedCards.length === 2) {
+          const [a, b] = flippedCards;
+          if (a.dataset.image === b.dataset.image) {
+            matched++;
+            score += 100 + streak * 25;
+            streak++;
+            flippedCards = [];
+            updateStats();
+            if (matched === 9) handleWin();
+          } else {
+            streak = 0;
+            misses++;
+            score = Math.max(0, score - 20);
+            setTimeout(() => {
+              a.classList.remove("flipped");
+              b.classList.remove("flipped");
+              flippedCards = [];
+              updateStats();
+            }, 800);
+          }
+        }
+      }
+    }
+
+    function updateStats() {
+      document.getElementById("score").textContent = score;
+      document.getElementById("streak").textContent = streak;
+      document.getElementById("misses").textContent = misses;
+      document.getElementById("matched").textContent = matched;
+    }
+
+    async function showLeaderboard() {
+      closeAllPopups();
+      openPopup("loading-popup");
+      try {
+        const res = await fetch(LEADERBOARD_URL);
+        const list = await res.json();
+        const best = {};
+        list.forEach(p => {
+          if (!best[p.name] || p.score > best[p.name]) best[p.name] = p.score;
+        });
+        const sorted = Object.entries(best)
+          .sort((a, b) => b[1] - a[1])
+          .map((e, i) => ({ rank: i + 1, name: e[0], score: e[1] }))
+          .slice(0, 10);
+
+        let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed"><thead><tr>
+          <th style="width:5%"></th>
+          <th style="width:15%;text-align:center">Rank</th>
+          <th style="width:60%;text-align:left">Name</th>
+          <th style="width:20%;text-align:right">Score</th>
+        </tr></thead><tbody>`;
+        sorted.forEach(r => {
+          const scoreText =
+            r.name === currentPlayerName ? `${r.score} (you)` : r.score;
+          html += `<tr style="height:2.5rem">
+            <td style="text-align:center">${r.rank === 1 ? "🏆" : ""}</td>
+            <td style="text-align:center">${r.rank}</td>
+            <td style="text-align:left;padding-left:0.5rem">${r.name}</td>
+            <td style="text-align:right;padding-right:0.5rem">${scoreText}</td>
+          </tr>`;
+        });
+        html += `</tbody></table>`;
+        document.getElementById("leaderboard-entries").innerHTML = html;
+      } catch {
+        document.getElementById("leaderboard-entries").innerHTML =
+          "<p>Failed to load leaderboard.</p>";
+      } finally {
+        closeAllPopups();
+        openPopup("leaderboard-popup");
+      }
+    }
+
+    async function handleWin() {
+      clearInterval(timer);
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      document.getElementById("final-score").textContent = score;
+      document.getElementById("final-matches").textContent = matched;
+      document.getElementById("final-streak").textContent = streak;
+      document.getElementById("final-misses").textContent = misses;
+      document.getElementById("final-time").textContent = elapsed;
+      openPopup("win-popup");
+    }
+
+    function generateNickname() {
+      const a = adjectives[Math.floor(Math.random() * adjectives.length)];
+      const n = nouns[Math.floor(Math.random() * nouns.length)];
+      const num = Math.floor(100 + Math.random() * 900);
+      document.getElementById("player-name-input").value = `${a}${n}${num}`;
+    }
+
+    async function submitScore(name, score, email, optedIn) {
+      currentPlayerName = name;
+      try {
+        const resp = await fetch(LEADERBOARD_URL, {
+          method: "POST",
+          mode: "cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, score, email, optedIn }),
+        });
+        if (!resp.ok) throw new Error();
+        openPopup("submit-confirmation-popup");
+      } catch {
+        openPopup("submit-error-popup");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("start-button").onclick = startGame;
+      document.getElementById("title-howto").onclick = () =>
+        openPopup("howtoplay-popup");
+      document.getElementById("game-howto").onclick = () =>
+        openPopup("howtoplay-popup");
+      document.getElementById("leaderboard-button").onclick = showLeaderboard;
+      document.getElementById("restart-button").onclick = startGame;
+      document.getElementById("generate-name-button").onclick = generateNickname;
+      document
+        .getElementById("submit-score-button")
+        .onclick = () => {
+          const name = document
+            .getElementById("player-name-input")
+            .value.trim();
+          const email = document
+            .getElementById("player-email-input")
+            .value.trim();
+          const opted = document.getElementById(
+            "optin-checkbox"
+          ).checked;
+          submitScore(name, score, email, opted);
+        };
+    });
+  </script>
+</body>
+</html>
