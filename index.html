@@ -402,16 +402,18 @@
       }
     }
 
-    async function handleWin() {
-      clearInterval(timer);
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      document.getElementById("final-score").textContent = score;
-      document.getElementById("final-matches").textContent = matched;
-      document.getElementById("final-streak").textContent = streak;
-      document.getElementById("final-misses").textContent = misses;
-      document.getElementById("final-time").textContent = elapsed;
-      openPopup("win-popup");
-    }
+   async function handleWin() {
+  clearInterval(timer);
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  document.getElementById("final-score").textContent   = score;
+  document.getElementById("final-matches").textContent = matched;
+  document.getElementById("final-streak").textContent  = streak;
+  document.getElementById("final-misses").textContent  = misses;
+  document.getElementById("final-time").textContent    = elapsed;
+
+  // slight 1 second delay before showing the popup
+  setTimeout(() => openPopup("win-popup"), 1000);
+}
 
     function generateNickname() {
       const a = adjectives[Math.floor(Math.random() * adjectives.length)];
@@ -421,20 +423,29 @@
     }
 
     async function submitScore(name, score, email, optedIn) {
-      currentPlayerName = name;
-      try {
-        const resp = await fetch(LEADERBOARD_URL, {
-          method: "POST",
-          mode: "cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, score, email, optedIn }),
-        });
-        if (!resp.ok) throw new Error();
-        openPopup("submit-confirmation-popup");
-      } catch {
-        openPopup("submit-error-popup");
-      }
+  currentPlayerName = name;
+  try {
+    const resp = await fetch(LEADERBOARD_URL, {
+      method: "POST",
+      mode: "cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, score, email, optedIn }),
+    });
+    if (!resp.ok) {
+      // log HTTP error code for debugging
+      console.error("Submit failed:", resp.status, resp.statusText);
+      throw new Error(`Server returned ${resp.status}`);
     }
+    openPopup("submit-confirmation-popup");
+  } catch (err) {
+    console.error("Submission error:", err);
+    // show a more helpful error message
+    document
+      .querySelector("#submit-error-popup p")
+      .textContent = `Submission failed: ${err.message}. Please check your network or try again.`;
+    openPopup("submit-error-popup");
+  }
+}
 
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("start-button").onclick = startGame;
