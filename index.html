@@ -425,19 +425,19 @@
 async function submitScore(name, score, email, optedIn) {
   currentPlayerName = name;
   try {
-    const resp = await fetch(LEADERBOARD_URL, {
-      method: "POST",
-      mode: "cors",
-      // no custom headers = a “simple” request, no preflight
-      body: JSON.stringify({ name, score, email, optedIn }),
+    // send as an opaque request—no CORS preflight
+    await fetch(LEADERBOARD_URL, {
+      method: 'POST',
+      mode:   'no-cors',
+      body:   JSON.stringify({ name, score, email, optedIn })
     });
-    if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+    // we assume success
     openPopup("submit-confirmation-popup");
   } catch (err) {
     console.error("Submission error:", err);
     document
       .querySelector("#submit-error-popup p")
-      .textContent = `Submission failed: ${err.message}. Please check your network or try again.`;
+      .textContent = `Submission failed. Please check your network or try again.`;
     openPopup("submit-error-popup");
   }
 }
