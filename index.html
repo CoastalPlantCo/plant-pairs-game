@@ -21,8 +21,9 @@
 
     /* Popups */
     .popup {
-      position: fixed; top:50%; left:50%;
-      transform: translate(-50%,-50%) scale(0.9);
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
       z-index: 9999;
       background: #fff;
       border-radius: 1rem;
@@ -33,7 +34,7 @@
       width: 90%; max-width: 400px;
     }
     .popup.show {
-      transform: translate(-50%,-50%) scale(1);
+      transform: translate(-50%, -50%) scale(1);
       opacity: 1;
     }
     .popup .close-btn {
@@ -66,23 +67,23 @@
     }
     button:hover { transform: scale(1.05); }
 
-    /* Game Board & Cards */
+    /* GAME BOARD: 3 cols mobile, 6 cols desktop */
     #game-board {
       display: grid;
-      /* auto-fit columns at min 120px, expand to fill */
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 20px;
-      justify-content: center;
       margin: 3rem auto;
       padding: 0 1rem;
-      max-width: 1080px;
+      width: 100%;
+      max-width: none !important;
     }
-    @media(max-width:768px){
+    @media (min-width: 768px) {
       #game-board {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 12px; max-width: 360px; padding: 0;
+        grid-template-columns: repeat(6, 1fr);
       }
     }
+
+    /* Cards */
     .card {
       perspective: 1000px;
       width: 100%; aspect-ratio: 1/1;
@@ -208,7 +209,6 @@
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>Score Submitted!</h3>
     <p>Your score has been added to the leaderboard.</p>
-    <!-- now correctly calls showLeaderboard() -->
     <button onclick="showLeaderboard()">View Leaderboard</button>
     <button onclick="closeAllPopups()">Close</button>
   </div>
@@ -225,14 +225,37 @@
     const LEADERBOARD_URL =
       "https://script.google.com/macros/s/AKfycbw1EyWeWyyQq7_mZ_NOdyzp_ITAv5MMQLx-gssjtD9d4gtfq0EYUOBpmn8_gMCWNDVT/exec";
 
-    // ... your images, adjectives, nouns arrays ...
+    const images = [
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_1.jpg?v=1744695948",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_2.jpg?v=1744695919",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_3.jpg?v=1744695892",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_4.jpg?v=1744695856",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_5.jpg?v=1744695804",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_6.jpg?v=1744695873",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_7.jpg?v=1744695825",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_8.jpg?v=1744695840",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_9.jpg?v=1745449640",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_10.jpg?v=1746514090",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_11.jpg?v=1746514261",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_12.jpg?v=1746514463",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_13.jpg?v=1746514507",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_14.jpg?v=1746514711",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_15.jpg?v=1746514739",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_16.heic?v=1747545315",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_17.jpg?v=1746514783",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_18.png?v=1746514796",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_19.png?v=1746514816"
+    ];
+
+    const adjectives = ["Sunny","Misty","Rustic","Emerald","Silver","Golden","Velvet","Silent","Whispering","Verdant","Autumn","Blossom","Crisp","Dewy","Jade","Leafy","Mossy","Petal","Quaint","Thorny","Willow","Xanadu","Yellow","Zesty","Bloom"];
+    const nouns      = ["Fern","Orchid","Ivy","Maple","Cactus","Pine","Willow","Birch","Rose","Lotus","Dahlia","Bamboo","Cedar","Elm","Fuchsia","Gardenia","Holly","Jasmine","Lilac","Magnolia","Nectar","Opal","Palm","Quince","Reed"];
 
     let flippedCards = [], matched = 0, score = 0, streak = 0, misses = 0;
     let startTime = null, timer = null, currentPlayerName = null;
 
     function shuffle(a) {
       for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(Math.random()* (i + 1));
         [a[i], a[j]] = [a[j], a[i]];
       }
     }
@@ -243,6 +266,7 @@
         p.classList.add('hidden');
       });
     }
+
     function openPopup(id) {
       const p = document.getElementById(id);
       p.classList.remove('hidden');
@@ -250,27 +274,20 @@
     }
 
     function initGame() {
-      // pick 9 unique
       const selected = [];
       while (selected.length < 9) {
-        const img = images[Math.floor(Math.random() * images.length)];
+        const img = images[Math.floor(Math.random()*images.length)];
         if (!selected.includes(img)) selected.push(img);
       }
-      // build deck
       const deck = [];
-      selected.forEach(img => deck.push(img, img));
+      selected.forEach(img => deck.push(img,img));
       shuffle(deck);
 
-      // reset
       flippedCards = [];
-      matched = 0;
-      score = 0;
-      streak = 0;
-      misses = 0;
+      matched = 0; score = 0; streak = 0; misses = 0;
       document.getElementById("elapsed").textContent = "0";
       updateStats();
 
-      // render
       const board = document.getElementById("game-board");
       board.innerHTML = "";
       deck.forEach(img => {
@@ -279,8 +296,8 @@
         card.dataset.image = img;
         card.innerHTML = `
           <div class="card-inner">
-            <div class="front" style="background-image:url('${img}');"></div>
-            <div class="back"  style="background-image:url('https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_back.jpg?v=1744647556');"></div>
+            <div class="front" style="background-image:url('${img}')"></div>
+            <div class="back"  style="background-image:url('https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_back.jpg?v=1744647556')"></div>
           </div>`;
         card.addEventListener("click", () => flipCard(card));
         board.appendChild(card);
@@ -302,17 +319,17 @@
         startTime = Date.now();
         timer = setInterval(() => {
           document.getElementById("elapsed").textContent =
-            Math.floor((Date.now() - startTime) / 1000);
-        }, 1000);
+            Math.floor((Date.now() - startTime)/1000);
+        },1000);
       }
       if (flippedCards.length < 2 && !flippedCards.includes(card)) {
         card.classList.add("flipped");
         flippedCards.push(card);
         if (flippedCards.length === 2) {
-          const [a, b] = flippedCards;
+          const [a,b] = flippedCards;
           if (a.dataset.image === b.dataset.image) {
             matched++;
-            score += 100 + streak * 25;
+            score += 100 + streak*25;
             streak++;
             flippedCards = [];
             updateStats();
@@ -320,26 +337,26 @@
           } else {
             streak = 0;
             misses++;
-            score = Math.max(0, score - 20);
-            setTimeout(() => {
+            score = Math.max(0, score-20);
+            setTimeout(()=>{
               a.classList.remove("flipped");
               b.classList.remove("flipped");
               flippedCards = [];
               updateStats();
-            }, 800);
+            },800);
           }
         }
       }
     }
 
     function updateStats() {
-      document.getElementById("score").textContent = score;
-      document.getElementById("streak").textContent = streak;
-      document.getElementById("misses").textContent = misses;
+      document.getElementById("score").textContent   = score;
+      document.getElementById("streak").textContent  = streak;
+      document.getElementById("misses").textContent  = misses;
       document.getElementById("matched").textContent = matched;
     }
 
-    // JSONP leaderboard loader
+    // JSONP-based leaderboard
     function showLeaderboard() {
       closeAllPopups();
       openPopup("loading-popup");
@@ -357,8 +374,8 @@
         if (!best[p.name] || p.score > best[p.name]) best[p.name] = p.score;
       });
       const sorted = Object.entries(best)
-        .sort((a, b) => b[1] - a[1])
-        .map((e, i) => ({ rank: i+1, name: e[0], score: e[1] }))
+        .sort((a,b)=>b[1]-a[1])
+        .map((e,i)=>({rank:i+1,name:e[0],score:e[1]}))
         .slice(0,10);
 
       let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed">
@@ -369,16 +386,14 @@
           <th style="width:20%;text-align:right">Score</th>
         </tr></thead><tbody>`;
 
-      sorted.forEach(r => {
-        if (r.name === currentPlayerName) {
-          // right-align number, then show “(you)”
+      sorted.forEach(r=>{
+        if(r.name===currentPlayerName){
           html += `<tr style="height:2.5rem">
             <td style="text-align:center">${r.rank===1?"🏆":""}</td>
             <td style="text-align:center">${r.rank}</td>
             <td style="text-align:left;padding-left:0.5rem">${r.name}</td>
             <td style="display:flex;justify-content:flex-end;gap:4px;padding-right:0.5rem">
-              <span>${r.score}</span>
-              <span style="font-size:0.8em;color:var(--brand-text)">(you)</span>
+              <span>${r.score}</span><span style="font-size:0.8em;">(you)</span>
             </td>
           </tr>`;
         } else {
@@ -399,7 +414,7 @@
 
     async function handleWin() {
       clearInterval(timer);
-      const elapsed = Math.floor((Date.now() - startTime)/1000);
+      const elapsed = Math.floor((Date.now()-startTime)/1000);
       document.getElementById("final-score").textContent   = score;
       document.getElementById("final-matches").textContent = matched;
       document.getElementById("final-streak").textContent  = streak;
@@ -411,39 +426,38 @@
     function generateNickname() {
       const a = adjectives[Math.floor(Math.random()*adjectives.length)];
       const n = nouns[Math.floor(Math.random()*nouns.length)];
-      const num = Math.floor(100 + Math.random()*900);
+      const num = Math.floor(100+Math.random()*900);
       document.getElementById("player-name-input").value = `${a}${n}${num}`;
     }
 
-    async function submitScore(name, score, email, optedIn) {
+    async function submitScore(name,score,email,optedIn){
       currentPlayerName = name;
       try {
-        await fetch(LEADERBOARD_URL, {
-          method: 'POST',
-          mode:   'no-cors',
-          body:   JSON.stringify({ name, score, email, optedIn })
+        await fetch(LEADERBOARD_URL,{
+          method:'POST', mode:'no-cors',
+          body:JSON.stringify({name,score,email,optedIn})
         });
         openPopup("submit-confirmation-popup");
-      } catch (err) {
-        console.error("Submission error:", err);
-        document.querySelector("#submit-error-popup p")
-                .textContent = "Submission failed. Please check your network and try again.";
+      } catch(err){
+        console.error(err);
+        document.querySelector("#submit-error-popup p").textContent =
+          "Submission failed. Please check your network and try again.";
         openPopup("submit-error-popup");
       }
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded",()=>{
       document.getElementById("start-button").onclick     = startGame;
       document.getElementById("title-howto").onclick     = ()=>openPopup("howtoplay-popup");
       document.getElementById("game-howto").onclick      = ()=>openPopup("howtoplay-popup");
       document.getElementById("leaderboard-button").onclick = showLeaderboard;
       document.getElementById("restart-button").onclick  = startGame;
       document.getElementById("generate-name-button").onclick = generateNickname;
-      document.getElementById("submit-score-button").onclick = () => {
+      document.getElementById("submit-score-button").onclick = ()=>{
         const name  = document.getElementById("player-name-input").value.trim();
         const email = document.getElementById("player-email-input").value.trim();
         const opted = document.getElementById("optin-checkbox").checked;
-        submitScore(name, score, email, opted);
+        submitScore(name,score,email,opted);
       };
     });
   </script>
