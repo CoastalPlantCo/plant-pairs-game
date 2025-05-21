@@ -67,7 +67,7 @@
     }
     button:hover { transform: scale(1.05); }
 
-    /* GAME BOARD: 3 cols mobile, 6 cols desktop */
+    /* GAME BOARD: 3 cols below 768px, 6 cols above */
     #game-board {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -110,21 +110,8 @@
 </head>
 <body>
 
-  <!-- Title Screen -->
-  <div id="title-screen">
-    <img src="https://cdn.shopify.com/s/files/1/0593/3731/0342/files/PlantPairs.png?v=1744773485"
-         alt="Plant Pairs Logo"
-         style="max-width:360px;margin:2rem auto;display:block;" />
-    <h2 style="margin:0.5rem 0;">Match the pairs to win!</h2>
-    <p style="margin:0.5rem 0;">Test your memory. Earn points. Climb the leaderboard!</p>
-    <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:1rem;margin-top:1rem;">
-      <button id="start-button">Start Game</button>
-      <button id="title-howto">How to Play</button>
-    </div>
-  </div>
-
-  <!-- Game Container -->
-  <div id="game-container" class="hidden">
+  <!-- Main Game Container (visible immediately) -->
+  <div id="game-container">
     <div style="margin-top:1rem;font-size:1.25rem;font-weight:bold;">
       Score: <span id="score">0</span> |
       Streak: <span id="streak">0</span> |
@@ -201,7 +188,7 @@
       Sign me up to receive promotions, care tips & more!
     </label>
     <button id="submit-score-button">Submit Score</button>
-    <button onclick="startGame()">Play Again</button>
+    <button onclick="initGame()">Play Again</button>
   </div>
 
   <!-- Submission Confirmation -->
@@ -254,9 +241,9 @@
     let startTime = null, timer = null, currentPlayerName = null;
 
     function shuffle(a) {
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random()* (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
+      for (let i = a.length-1; i>0; i--) {
+        const j = Math.floor(Math.random() * (i+1));
+        [a[i],a[j]]=[a[j],a[i]];
       }
     }
 
@@ -274,20 +261,25 @@
     }
 
     function initGame() {
+      // pick 9 unique cards
       const selected = [];
       while (selected.length < 9) {
         const img = images[Math.floor(Math.random()*images.length)];
         if (!selected.includes(img)) selected.push(img);
       }
+      // double and shuffle
       const deck = [];
       selected.forEach(img => deck.push(img,img));
       shuffle(deck);
 
+      // reset
       flippedCards = [];
-      matched = 0; score = 0; streak = 0; misses = 0;
+      matched = streak = misses = 0;
+      score = 0;
       document.getElementById("elapsed").textContent = "0";
       updateStats();
 
+      // render
       const board = document.getElementById("game-board");
       board.innerHTML = "";
       deck.forEach(img => {
@@ -299,49 +291,38 @@
             <div class="front" style="background-image:url('${img}')"></div>
             <div class="back"  style="background-image:url('https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_back.jpg?v=1744647556')"></div>
           </div>`;
-        card.addEventListener("click", () => flipCard(card));
+        card.addEventListener("click", ()=>flipCard(card));
         board.appendChild(card);
       });
-    }
-
-    function startGame() {
-      if (timer) clearInterval(timer);
-      startTime = null;
-      document.getElementById("elapsed").textContent = "0";
-      closeAllPopups();
-      document.getElementById("title-screen").classList.add("hidden");
-      document.getElementById("game-container").classList.remove("hidden");
-      initGame();
     }
 
     function flipCard(card) {
       if (!startTime) {
         startTime = Date.now();
-        timer = setInterval(() => {
+        timer = setInterval(()=>{
           document.getElementById("elapsed").textContent =
-            Math.floor((Date.now() - startTime)/1000);
+            Math.floor((Date.now()-startTime)/1000);
         },1000);
       }
-      if (flippedCards.length < 2 && !flippedCards.includes(card)) {
+      if (flippedCards.length<2 && !flippedCards.includes(card)) {
         card.classList.add("flipped");
         flippedCards.push(card);
-        if (flippedCards.length === 2) {
+        if (flippedCards.length===2) {
           const [a,b] = flippedCards;
-          if (a.dataset.image === b.dataset.image) {
+          if (a.dataset.image===b.dataset.image) {
             matched++;
             score += 100 + streak*25;
             streak++;
-            flippedCards = [];
+            flippedCards=[];
             updateStats();
-            if (matched === 9) handleWin();
+            if (matched===9) handleWin();
           } else {
-            streak = 0;
-            misses++;
-            score = Math.max(0, score-20);
+            streak=0; misses++;
+            score=Math.max(0,score-20);
             setTimeout(()=>{
               a.classList.remove("flipped");
               b.classList.remove("flipped");
-              flippedCards = [];
+              flippedCards=[];
               updateStats();
             },800);
           }
@@ -349,46 +330,44 @@
       }
     }
 
-    function updateStats() {
+    function updateStats(){
       document.getElementById("score").textContent   = score;
       document.getElementById("streak").textContent  = streak;
       document.getElementById("misses").textContent  = misses;
       document.getElementById("matched").textContent = matched;
     }
 
-    // JSONP-based leaderboard
-    function showLeaderboard() {
+    // JSONP leaderboard
+    function showLeaderboard(){
       closeAllPopups();
       openPopup("loading-popup");
-      const old = document.getElementById("jsonp-leaderboard");
-      if (old) old.remove();
+      const old = document.getElementById("jsonp");
+      if(old) old.remove();
       const s = document.createElement("script");
-      s.id = "jsonp-leaderboard";
-      s.src = `${LEADERBOARD_URL}?callback=renderLeaderboard`;
+      s.id="jsonp";
+      s.src=`${LEADERBOARD_URL}?callback=renderLeaderboard`;
       document.body.appendChild(s);
     }
-
-    function renderLeaderboard(list) {
-      const best = {};
-      list.forEach(p => {
-        if (!best[p.name] || p.score > best[p.name]) best[p.name] = p.score;
+    function renderLeaderboard(list){
+      const best={};
+      list.forEach(p=>{
+        if(!best[p.name]||p.score>best[p.name]) best[p.name]=p.score;
       });
       const sorted = Object.entries(best)
         .sort((a,b)=>b[1]-a[1])
         .map((e,i)=>({rank:i+1,name:e[0],score:e[1]}))
         .slice(0,10);
 
-      let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed">
+      let html=`<table style="width:100%;border-collapse:collapse;table-layout:fixed">
         <thead><tr>
           <th style="width:5%"></th>
           <th style="width:15%;text-align:center">Rank</th>
           <th style="width:60%;text-align:left">Name</th>
           <th style="width:20%;text-align:right">Score</th>
         </tr></thead><tbody>`;
-
       sorted.forEach(r=>{
         if(r.name===currentPlayerName){
-          html += `<tr style="height:2.5rem">
+          html+=`<tr style="height:2.5rem">
             <td style="text-align:center">${r.rank===1?"🏆":""}</td>
             <td style="text-align:center">${r.rank}</td>
             <td style="text-align:left;padding-left:0.5rem">${r.name}</td>
@@ -397,7 +376,7 @@
             </td>
           </tr>`;
         } else {
-          html += `<tr style="height:2.5rem">
+          html+=`<tr style="height:2.5rem">
             <td style="text-align:center">${r.rank===1?"🏆":""}</td>
             <td style="text-align:center">${r.rank}</td>
             <td style="text-align:left;padding-left:0.5rem">${r.name}</td>
@@ -405,16 +384,15 @@
           </tr>`;
         }
       });
-
-      html += `</tbody></table>`;
-      document.getElementById("leaderboard-entries").innerHTML = html;
+      html+=`</tbody></table>`;
+      document.getElementById("leaderboard-entries").innerHTML=html;
       closeAllPopups();
       openPopup("leaderboard-popup");
     }
 
-    async function handleWin() {
+    async function handleWin(){
       clearInterval(timer);
-      const elapsed = Math.floor((Date.now()-startTime)/1000);
+      const elapsed=Math.floor((Date.now()-startTime)/1000);
       document.getElementById("final-score").textContent   = score;
       document.getElementById("final-matches").textContent = matched;
       document.getElementById("final-streak").textContent  = streak;
@@ -423,41 +401,36 @@
       setTimeout(()=>openPopup("win-popup"),1000);
     }
 
-    function generateNickname() {
-      const a = adjectives[Math.floor(Math.random()*adjectives.length)];
-      const n = nouns[Math.floor(Math.random()*nouns.length)];
-      const num = Math.floor(100+Math.random()*900);
-      document.getElementById("player-name-input").value = `${a}${n}${num}`;
+    function generateNickname(){
+      const a=adjectives[Math.floor(Math.random()*adjectives.length)];
+      const n=nouns[Math.floor(Math.random()*nouns.length)];
+      const num=Math.floor(100+Math.random()*900);
+      document.getElementById("player-name-input").value=`${a}${n}${num}`;
     }
 
     async function submitScore(name,score,email,optedIn){
-      currentPlayerName = name;
-      try {
-        await fetch(LEADERBOARD_URL,{
-          method:'POST', mode:'no-cors',
-          body:JSON.stringify({name,score,email,optedIn})
-        });
+      currentPlayerName=name;
+      try{
+        await fetch(LEADERBOARD_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({name,score,email,optedIn})});
         openPopup("submit-confirmation-popup");
-      } catch(err){
-        console.error(err);
-        document.querySelector("#submit-error-popup p").textContent =
-          "Submission failed. Please check your network and try again.";
+      }catch(e){
+        console.error(e);
+        document.querySelector("#submit-error-popup p").textContent="Submission failed. Please check your network and try again.";
         openPopup("submit-error-popup");
       }
     }
 
     document.addEventListener("DOMContentLoaded",()=>{
-      document.getElementById("start-button").onclick     = startGame;
-      document.getElementById("title-howto").onclick     = ()=>openPopup("howtoplay-popup");
-      document.getElementById("game-howto").onclick      = ()=>openPopup("howtoplay-popup");
+      initGame();
+      document.getElementById("restart-button").onclick  = initGame;
+      document.getElementById("game-howto").onclick     = ()=>openPopup("howtoplay-popup");
       document.getElementById("leaderboard-button").onclick = showLeaderboard;
-      document.getElementById("restart-button").onclick  = startGame;
       document.getElementById("generate-name-button").onclick = generateNickname;
       document.getElementById("submit-score-button").onclick = ()=>{
-        const name  = document.getElementById("player-name-input").value.trim();
-        const email = document.getElementById("player-email-input").value.trim();
-        const opted = document.getElementById("optin-checkbox").checked;
-        submitScore(name,score,email,opted);
+        const name = document.getElementById("player-name-input").value.trim();
+        const email= document.getElementById("player-email-input").value.trim();
+        const opt = document.getElementById("optin-checkbox").checked;
+        submitScore(name,score,email,opt);
       };
     });
   </script>
