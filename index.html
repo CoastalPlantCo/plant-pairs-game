@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <title>Plant Pairs | Coastal Plant Company</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <style>
     :root {
       --brand-bg: #fbf7ea;
@@ -11,107 +11,138 @@
       --popup-shadow: rgba(0,0,0,0.3);
     }
     body {
-      margin: 0;
-      font-family: 'Helvetica Neue', sans-serif;
-      background: var(--brand-bg);
-      color: var(--brand-text);
-      text-align: center;
+      margin:0;
+      font-family:'Helvetica Neue',sans-serif;
+      background:var(--brand-bg);
+      color:var(--brand-text);
+      text-align:center;
     }
-    .hidden { display: none; }
-
-    /* Popups */
-    .popup {
-      position: fixed;
-      top:50%; left:50%;
-      transform: translate(-50%,-50%) scale(0.9);
-      z-index: 9999;
-      background: #fff;
-      border-radius: 1rem;
-      padding: 2rem;
-      box-shadow: 0 20px 40px var(--popup-shadow);
-      opacity: 0;
-      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-      width: 90%; max-width: 400px;
-    }
-    .popup.show {
-      transform: translate(-50%,-50%) scale(1);
-      opacity: 1;
-    }
-    .popup .close-btn {
-      position: absolute; top:1rem; right:1rem;
-      font-size: 1.4rem; font-weight: bold;
-      background: none; border: none;
-      color: var(--brand-text);
-      cursor: pointer;
-    }
-    .popup h3 { margin-top: 0; font-size: 1.5rem; }
-    .spinner {
-      margin: 1rem auto; width: 40px; height: 40px;
-      border: 4px solid var(--brand-text);
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Buttons */
+    .hidden { display:none; }
     button {
-      background: var(--brand-text);
-      color: #fff;
-      padding: 0.75rem 1.5rem;
-      border: none; border-radius: 0.5rem;
-      font-size: 1rem; cursor: pointer;
-      margin: 0.5rem;
-      box-shadow: 0 4px 8px var(--popup-shadow);
-      transition: transform 0.2s;
+      background:var(--brand-text);
+      color:white;
+      border:none;
+      border-radius:0.5rem;
+      padding:0.75rem 1.5rem;
+      margin:0.5rem;
+      cursor:pointer;
+      box-shadow:0 4px 8px var(--popup-shadow);
+      transition:transform 0.2s;
     }
-    button:hover { transform: scale(1.05); }
+    button:hover { transform:scale(1.05); }
 
-    /* GAME BOARD: 3 columns on small, 6 on wide, capped at 1080px */
-    #game-board {
-      display: grid;
-      grid-template-columns: repeat(3,1fr);
-      gap: 20px;
-      margin: 3rem auto;
-      padding: 0 1rem;
-      max-width: 1080px;
+    /* Title Screen */
+    #title-screen {
+      padding:2rem;
     }
-    @media (min-width: 768px) {
+    #title-screen img {
+      max-width:300px;
+      margin-bottom:1rem;
+    }
+
+    /* Game Container */
+    #game-container {
+      display:none;
+      max-width:1080px;
+      margin:0 auto 2rem;
+      padding:0 1rem;
+    }
+    #stats {
+      font-size:1.25rem;
+      font-weight:bold;
+      margin:2rem 0 1rem;
+    }
+
+    /* Board: 3 cols mobile, 6 cols desktop */
+    #game-board {
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:20px;
+    }
+    @media(min-width:768px) {
       #game-board {
-        grid-template-columns: repeat(6,1fr);
+        grid-template-columns:repeat(6,1fr);
       }
     }
 
     /* Cards */
     .card {
-      perspective: 1000px;
-      width: 100%; aspect-ratio: 1/1;
-      overflow: hidden;
+      perspective:1000px;
+      width:100%;
+      aspect-ratio:1/1;
+      cursor:pointer;
     }
     .card-inner {
-      width: 100%; height: 100%;
-      transition: transform 0.6s;
-      transform-style: preserve-3d;
-      position: relative;
+      width:100%; height:100%;
+      transition:transform 0.6s;
+      transform-style:preserve-3d;
+      position:relative;
+      border-radius:1rem;
+      overflow:hidden;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
     }
     .card.flipped .card-inner {
-      transform: rotateY(180deg);
+      transform:rotateY(180deg);
     }
     .card .front, .card .back {
-      position: absolute; width: 100%; height: 100%;
-      backface-visibility: hidden;
-      background-size: cover; background-position: center;
-      border-radius: 1.5rem;
+      position:absolute;
+      width:100%; height:100%;
+      backface-visibility:hidden;
+      background-size:cover;
+      background-position:center;
     }
-    .card .front { transform: rotateY(180deg); z-index: 2; }
-    .card .back  { transform: rotateY(0deg);   z-index: 1; }
+    .card .front { transform:rotateY(180deg); }
+    .card .back  { transform:rotateY(0); }
+
+    /* Popups */
+    .popup {
+      position:fixed;
+      top:50%; left:50%;
+      transform:translate(-50%,-50%) scale(0.9);
+      background:white;
+      border-radius:1rem;
+      padding:2rem;
+      box-shadow:0 20px 40px var(--popup-shadow);
+      opacity:0;
+      transition:transform 0.3s,opacity 0.3s;
+      z-index:9999;
+      width:90%; max-width:400px;
+    }
+    .popup.show {
+      transform:translate(-50%,-50%) scale(1);
+      opacity:1;
+    }
+    .popup .close-btn {
+      position:absolute; top:1rem; right:1rem;
+      background:none; border:none;
+      font-size:1.4rem; cursor:pointer;
+      color:var(--brand-text);
+    }
+    .spinner {
+      margin:1rem auto; width:40px; height:40px;
+      border:4px solid var(--brand-text);
+      border-top-color:transparent;
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <!-- Main Game Container -->
+  <!-- TITLE SCREEN -->
+  <div id="title-screen">
+    <img src="https://cdn.shopify.com/s/files/1/0593/3731/0342/files/PlantPairs.png?v=1744773485"
+         alt="Plant Pairs Logo"/>
+    <h2>Match the pairs to win!</h2>
+    <p>Test your memory. Earn points. Climb the leaderboard!</p>
+    <button id="start-button">Start Game</button>
+    <button id="title-howto">How to Play</button>
+  </div>
+
+  <!-- GAME -->
   <div id="game-container">
-    <div style="margin-top:1rem;font-size:1.25rem;font-weight:bold;">
+    <div id="stats">
       Score: <span id="score">0</span> |
       Streak: <span id="streak">0</span> |
       Misses: <span id="misses">0</span> |
@@ -119,134 +150,320 @@
       Time: <span id="elapsed">0</span>s
     </div>
     <div id="game-board"></div>
-    <div style="margin-top:2rem;">
+    <div>
       <button id="restart-button">Restart Game</button>
       <button id="game-howto">How to Play</button>
       <button id="leaderboard-button">View Leaderboard</button>
     </div>
   </div>
 
-  <!-- How to Play Popup -->
+  <!-- HOW TO PLAY -->
   <div id="howtoplay-popup" class="popup hidden">
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>How to Play</h3>
-    <ul style="text-align:left; list-style:disc inside; margin:1rem 0;">
+    <ul style="text-align:left; list-style:disc inside;">
       <li>Flip two cards to find a matching pair.</li>
-      <li>The game ends once all pairs are matched.</li>
+      <li>When all pairs are found, you win!</li>
       <li>Avoid mismatches to keep your streak bonus.</li>
-      <li>Finish quickly to maximize your time bonus.</li>
+      <li>Finish fast to maximize your time bonus.</li>
     </ul>
-    <h4 style="margin-top:1rem;text-align:left;">Scoring:</h4>
-    <ul style="text-align:left; list-style:disc inside; margin:0 0 1rem;">
-      <li><strong>Match found:</strong> +100 points</li>
-      <li><strong>Streak bonus:</strong> +25 per consecutive match</li>
-      <li><strong>Mismatch:</strong> −20 points</li>
-      <li><strong>Time bonus:</strong> Starts at 900, −3 per second</li>
+    <h4 style="text-align:left;">Scoring</h4>
+    <ul style="text-align:left; list-style:disc inside;">
+      <li><strong>Match:</strong> +100</li>
+      <li><strong>Streak:</strong> +25 per consecutive match</li>
+      <li><strong>Mismatch:</strong> −20</li>
+      <li><strong>Time Bonus:</strong> 900 → 0 at 3/sec</li>
     </ul>
     <button onclick="closeAllPopups()">Close</button>
   </div>
 
-  <!-- Loading Popup -->
+  <!-- LOADING -->
   <div id="loading-popup" class="popup hidden">
     <div class="spinner"></div>
-    <p>Loading leaderboard...</p>
+    <p>Loading leaderboard…</p>
   </div>
 
-  <!-- Leaderboard Popup -->
+  <!-- LEADERBOARD -->
   <div id="leaderboard-popup" class="popup hidden">
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>Leaderboard</h3>
-    <div id="leaderboard-entries" style="margin-top:1rem;"></div>
+    <div id="leaderboard-entries" style="margin:1rem 0;"></div>
     <button onclick="closeAllPopups()">Close</button>
   </div>
 
-  <!-- You Win Popup -->
+  <!-- WIN -->
   <div id="win-popup" class="popup hidden">
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>You Win!</h3>
     <p>Your Score: <span id="final-score">0</span></p>
-    <p id="breakdown" style="white-space:nowrap;font-weight:bold;">
+    <p style="font-weight:bold;">
       Matches: <span id="final-matches"></span> |
       Streak: <span id="final-streak"></span> |
       Misses: <span id="final-misses"></span> |
       Time: <span id="final-time"></span>s
     </p>
-    <div style="display:flex;gap:0.5rem;align-items:center;margin-top:1rem;">
+    <div style="display:flex;gap:0.5rem;margin-top:1rem;">
       <input id="player-name-input" type="text"
              placeholder="Your name or nickname"
-             style="flex:1;padding:0.5rem;" />
+             style="flex:1;padding:0.5rem;"/>
       <button id="generate-name-button" style="padding:0.5rem;font-size:0.9rem;">
         Generate Random Name
       </button>
     </div>
     <input id="player-email-input" type="email"
            placeholder="Your email (for prize notifications & exclusive offers)"
-           style="width:100%;padding:0.5rem;margin:0.5rem 0;" />
+           style="width:100%;padding:0.5rem;margin:0.5rem 0;"/>
     <label style="display:block;margin-bottom:1rem;">
-      <input id="optin-checkbox" type="checkbox" />
+      <input id="optin-checkbox" type="checkbox"/>
       Sign me up to receive promotions, care tips & more!
     </label>
     <button id="submit-score-button">Submit Score</button>
     <button onclick="initGame()">Play Again</button>
   </div>
 
-  <!-- Submission Confirmation -->
+  <!-- SUBMISSION CONFIRMATION -->
   <div id="submit-confirmation-popup" class="popup hidden">
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>Score Submitted!</h3>
-    <p>Your score has been added to the leaderboard.</p>
+    <p>Your score has been added.</p>
     <button onclick="showLeaderboard()">View Leaderboard</button>
     <button onclick="closeAllPopups()">Close</button>
   </div>
-
-  <!-- Submission Error -->
+  <!-- SUBMISSION ERROR -->
   <div id="submit-error-popup" class="popup hidden">
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>Submission Failed</h3>
-    <p>We couldn't submit your score. Please check your network and try again.</p>
+    <p>Check your network & try again.</p>
     <button onclick="closeAllPopups()">Close</button>
   </div>
 
   <script>
     const LEADERBOARD_URL =
-      "https://script.google.com/macros/s/AKfycbw1EyWeWyyQq7_mZ_NOdyzp_ITAv5MMQLx-gssjtD9d4gtfq0EYUOBpmn8_gMCWNDVT/exec";
+      "https://script.google.com/macros/s/AKfycbwnM9-OyorBBSPJJA80GrWMRMSh1FTM0mJPHR2uJeMgqvslYR4AoInELwv09Qe2fdo5/exec";
 
     const images = [
-      /* your 19 front-card URLs here */
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_1.jpg?v=1744695948",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_2.jpg?v=1744695919",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_3.jpg?v=1744695892",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_4.jpg?v=1744695856",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_5.jpg?v=1744695804",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_6.jpg?v=1744695873",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_7.jpg?v=1744695825",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_8.jpg?v=1744695840",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_9.jpg?v=1745449640",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_10.jpg?v=1746514090",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_11.jpg?v=1746514261",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_12.jpg?v=1746514463",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_13.jpg?v=1746514507",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_14.jpg?v=1746514711",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_15.jpg?v=1746514739",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_16.heic?v=1747545315",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_17.jpg?v=1746514783",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_18.png?v=1746514796",
+      "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_19.png?v=1746514816"
     ];
-    const adjectives = [ /* … */ ];
-    const nouns      = [ /* … */ ];
 
-    let flippedCards = [], matched = 0, score = 0, streak = 0, misses = 0;
-    let startTime = null, timer = null, currentPlayerName = null;
+    const adjectives = ["Sunny","Misty","Rustic","Emerald","Silver","Golden","Velvet","Silent","Whispering","Verdant","Autumn","Blossom","Crisp","Dewy","Jade","Leafy","Mossy","Petal","Quaint","Thorny","Willow","Xanadu","Yellow","Zesty","Bloom"];
+    const nouns      = ["Fern","Orchid","Ivy","Maple","Cactus","Pine","Willow","Birch","Rose","Lotus","Dahlia","Bamboo","Cedar","Elm","Fuchsia","Gardenia","Holly","Jasmine","Lilac","Magnolia","Nectar","Opal","Palm","Quince","Reed"];
 
-    function shuffle(a){ /* … same shuffle … */ }
-    function closeAllPopups(){ /* … */ }
-    function openPopup(id){ /* … */ }
+    let flippedCards=[], matched=0, score=0, streak=0, misses=0;
+    let startTime=null, timer=null, currentPlayerName=null;
+
+    function shuffle(a){
+      for(let i=a.length-1;i>0;i--){
+        const j= Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+    }
+    function closeAllPopups(){
+      document.querySelectorAll('.popup').forEach(p=>{
+        p.classList.remove('show');
+        p.classList.add('hidden');
+      });
+    }
+    function openPopup(id){
+      const p=document.getElementById(id);
+      p.classList.remove('hidden');
+      p.classList.add('show');
+    }
 
     function initGame(){
-      /* pick 9 unique, double, shuffle, reset stats, render cards */
+      // pick 9 unique
+      const sel=[];
+      while(sel.length<9){
+        const img= images[ Math.floor(Math.random()*images.length) ];
+        if(!sel.includes(img)) sel.push(img);
+      }
+      const deck=[];
+      sel.forEach(i=>deck.push(i,i));
+      shuffle(deck);
+
+      flippedCards=[]; matched=streak=misses=0; score=0;
+      clearInterval(timer); startTime=null;
+      document.getElementById("elapsed").textContent="0";
+      updateStats();
+      document.getElementById("title-screen").classList.add("hidden");
+      document.getElementById("game-container").style.display="block";
+
+      const board=document.getElementById("game-board");
+      board.innerHTML="";
+      deck.forEach(img=>{
+        const card=document.createElement("div");
+        card.className="card";
+        card.dataset.image=img;
+        card.innerHTML=`
+          <div class="card-inner">
+            <div class="front" style="background-image:url('${img}')"></div>
+            <div class="back"  style="background-image:url('https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_back.jpg?v=1744647556')"></div>
+          </div>`;
+        card.addEventListener("click",()=>flipCard(card));
+        board.appendChild(card);
+      });
     }
-    function flipCard(card){ /* … start timer on first flip, handle match/mismatch … */ }
-    function updateStats(){ /* … update score/streak/etc … */ }
-    function showLeaderboard(){ /* … JSONP fetch + render … */ }
-    function handleWin(){ /* … show win popup with delay … */ }
-    function generateNickname(){ /* … */ }
-    async function submitScore(name,score,email,optedIn){ /* … no-cors post … */ }
+
+    function flipCard(card){
+      if(!startTime){
+        startTime=Date.now();
+        timer=setInterval(()=>{
+          document.getElementById("elapsed").textContent=
+            Math.floor((Date.now()-startTime)/1000);
+        },1000);
+      }
+      if(flippedCards.length<2 && !flippedCards.includes(card)){
+        card.classList.add("flipped");
+        flippedCards.push(card);
+        if(flippedCards.length===2){
+          const [a,b]=flippedCards;
+          if(a.dataset.image===b.dataset.image){
+            matched++;
+            score+=100+streak*25;
+            streak++;
+            flippedCards=[];
+            updateStats();
+            if(matched===9) handleWin();
+          } else {
+            streak=0; misses++; score=Math.max(0,score-20);
+            setTimeout(()=>{
+              a.classList.remove("flipped");
+              b.classList.remove("flipped");
+              flippedCards=[];
+              updateStats();
+            },800);
+          }
+        }
+      }
+    }
+
+    function updateStats(){
+      document.getElementById("score").textContent=score;
+      document.getElementById("streak").textContent=streak;
+      document.getElementById("misses").textContent=misses;
+      document.getElementById("matched").textContent=matched;
+    }
+
+    function showLeaderboard(){
+      closeAllPopups();
+      openPopup("loading-popup");
+      const old=document.getElementById("jsonp");
+      if(old) old.remove();
+      const s=document.createElement("script");
+      s.id="jsonp";
+      s.src=`${LEADERBOARD_URL}?callback=renderLeaderboard`;
+      document.body.appendChild(s);
+    }
+    function renderLeaderboard(list){
+      const best={};
+      list.forEach(p=>{
+        if(!best[p.name]||p.score>best[p.name]) best[p.name]=p.score;
+      });
+      const sorted=Object.entries(best)
+        .sort((a,b)=>b[1]-a[1])
+        .map((e,i)=>({rank:i+1,name:e[0],score:e[1]}))
+        .slice(0,10);
+      let html=`<table style="width:100%;border-collapse:collapse;table-layout:fixed">
+        <thead><tr>
+          <th style="width:5%"></th>
+          <th style="width:15%;text-align:center">Rank</th>
+          <th style="width:60%;text-align:left">Name</th>
+          <th style="width:20%;text-align:right">Score</th>
+        </tr></thead><tbody>`;
+      sorted.forEach(r=>{
+        if(r.name===currentPlayerName){
+          html+=`<tr style="height:2.5rem">
+            <td style="text-align:center">${r.rank===1?"🏆":""}</td>
+            <td style="text-align:center">${r.rank}</td>
+            <td style="text-align:left;padding-left:0.5rem">${r.name}</td>
+            <td style="display:flex;justify-content:flex-end;gap:4px;padding-right:0.5rem">
+              <span>${r.score}</span><span style="font-size:0.8em;">(you)</span>
+            </td>
+          </tr>`;
+        } else {
+          html+=`<tr style="height:2.5rem">
+            <td style="text-align:center">${r.rank===1?"🏆":""}</td>
+            <td style="text-align:center">${r.rank}</td>
+            <td style="text-align:left;padding-left:0.5rem">${r.name}</td>
+            <td style="text-align:right;padding-right:0.5rem">${r.score}</td>
+          </tr>`;
+        }
+      });
+      html+=`</tbody></table>`;
+      document.getElementById("leaderboard-entries").innerHTML=html;
+      closeAllPopups();
+      openPopup("leaderboard-popup");
+    }
+
+    function handleWin(){
+      clearInterval(timer);
+      const elapsed=Math.floor((Date.now()-startTime)/1000);
+      document.getElementById("final-score").textContent=score;
+      document.getElementById("final-matches").textContent=matched;
+      document.getElementById("final-streak").textContent=streak;
+      document.getElementById("final-misses").textContent=misses;
+      document.getElementById("final-time").textContent=elapsed;
+      setTimeout(()=>openPopup("win-popup"),500);
+    }
+
+    function generateNickname(){
+      const a=adjectives[Math.floor(Math.random()*adjectives.length)];
+      const n=nouns[Math.floor(Math.random()*nouns.length)];
+      const num=Math.floor(100+Math.random()*900);
+      document.getElementById("player-name-input").value=`${a}${n}${num}`;
+    }
+
+    async function submitScore(name,score,email,optedIn){
+      currentPlayerName=name;
+      try {
+        await fetch(LEADERBOARD_URL,{
+          method:'POST',
+          mode:'no-cors',
+          body:JSON.stringify({name,score,email,optedIn})
+        });
+        openPopup("submit-confirmation-popup");
+      } catch {
+        openPopup("submit-error-popup");
+      }
+    }
 
     document.addEventListener("DOMContentLoaded",()=>{
-      initGame();
-      document.getElementById("restart-button").onclick = initGame;
-      document.getElementById("game-howto").onclick    = ()=>openPopup("howtoplay-popup");
-      document.getElementById("leaderboard-button").onclick = showLeaderboard;
-      document.getElementById("generate-name-button").onclick = generateNickname;
-      document.getElementById("submit-score-button").onclick = ()=>{
-        const n = document.getElementById("player-name-input").value.trim();
-        const e = document.getElementById("player-email-input").value.trim();
-        const o = document.getElementById("optin-checkbox").checked;
+      document.getElementById("start-button").onclick=startGame;
+      document.getElementById("title-howto").onclick=()=>openPopup("howtoplay-popup");
+      document.getElementById("restart-button").onclick=initGame;
+      document.getElementById("game-howto").onclick=()=>openPopup("howtoplay-popup");
+      document.getElementById("leaderboard-button").onclick=showLeaderboard;
+      document.getElementById("generate-name-button").onclick=generateNickname;
+      document.getElementById("submit-score-button").onclick=()=>{
+        const n=document.getElementById("player-name-input").value.trim();
+        const e=document.getElementById("player-email-input").value.trim();
+        const o=document.getElementById("optin-checkbox").checked;
         submitScore(n,score,e,o);
       };
     });
+
+    function startGame(){
+      document.getElementById("title-screen").classList.add("hidden");
+      document.getElementById("game-container").style.display="block";
+      initGame();
+    }
   </script>
 </body>
 </html>
