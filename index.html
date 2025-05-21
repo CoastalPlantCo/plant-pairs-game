@@ -18,8 +18,10 @@
       text-align: center;
     }
     .hidden { display: none; }
+    /* --- POPUPS --- */
     .popup {
-      position: fixed; top:50%; left:50%;
+      position: fixed;
+      top: 50%; left: 50%;
       transform: translate(-50%,-50%) scale(0.9);
       z-index: 9999;
       background: #fff;
@@ -50,6 +52,7 @@
       animation: spin 1s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    /* --- BUTTONS --- */
     button {
       background: var(--brand-text);
       color: #fff;
@@ -61,6 +64,7 @@
       transition: transform 0.2s;
     }
     button:hover { transform: scale(1.05); }
+    /* --- GAME BOARD & CARDS --- */
     #game-board {
       display: grid;
       grid-template-columns: repeat(6,1fr);
@@ -102,7 +106,7 @@
 </head>
 <body>
 
-  <!-- Title Screen -->
+  <!-- TITLE SCREEN -->
   <div id="title-screen">
     <img src="https://cdn.shopify.com/s/files/1/0593/3731/0342/files/PlantPairs.png?v=1744773485"
          alt="Plant Pairs Logo"
@@ -118,7 +122,7 @@
     </div>
   </div>
 
-  <!-- Game Container -->
+  <!-- GAME CONTAINER -->
   <div id="game-container" class="hidden">
     <div style="margin-top:1rem;font-size:1.25rem;font-weight:bold;">
       Score: <span id="score">0</span> |
@@ -138,7 +142,7 @@
     </div>
   </div>
 
-  <!-- How to Play Popup -->
+  <!-- HOW TO PLAY POPUP -->
   <div id="howtoplay-popup" class="popup hidden">
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>How to Play</h3>
@@ -158,13 +162,13 @@
     <button onclick="closeAllPopups()">Close</button>
   </div>
 
-  <!-- Loading Popup -->
+  <!-- LOADING POPUP -->
   <div id="loading-popup" class="popup hidden">
     <div class="spinner"></div>
     <p>Loading leaderboard...</p>
   </div>
 
-  <!-- Leaderboard Popup -->
+  <!-- LEADERBOARD POPUP -->
   <div id="leaderboard-popup" class="popup hidden">
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>Leaderboard</h3>
@@ -172,7 +176,7 @@
     <button onclick="closeAllPopups()">Close</button>
   </div>
 
-  <!-- You Win Popup -->
+  <!-- WIN POPUP -->
   <div id="win-popup" class="popup hidden">
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>You Win!</h3>
@@ -205,7 +209,7 @@
     </a>
   </div>
 
-  <!-- Submission Confirmation -->
+  <!-- SUBMISSION CONFIRM POPUP -->
   <div id="submit-confirmation-popup" class="popup hidden">
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>Score Submitted!</h3>
@@ -214,7 +218,7 @@
     <button onclick="closeAllPopups()">Close</button>
   </div>
 
-  <!-- Submission Error -->
+  <!-- SUBMISSION ERROR POPUP -->
   <div id="submit-error-popup" class="popup hidden">
     <button class="close-btn" onclick="closeAllPopups()">&times;</button>
     <h3>Submission Failed</h3>
@@ -226,7 +230,7 @@
     const LEADERBOARD_URL =
       "https://script.google.com/macros/s/AKfycbw1EyWeWyyQq7_mZ_NOdyzp_ITAv5MMQLx-gssjtD9d4gtfq0EYUOBpmn8_gMCWNDVT/exec";
 
-    // 19 versioned front-card URLs
+    // 19 card-front URLs
     const images = [
       "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_1.jpg?v=1744695948",
       "https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_front_2.jpg?v=1744695919",
@@ -257,215 +261,164 @@
 
     function shuffle(a) {
       for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
+        const j = Math.floor(Math.random() * (i + 1)); [a[i],a[j]]=[a[j],a[i]];
       }
     }
+    function closeAllPopups(){ document.querySelectorAll('.popup').forEach(p=>p.classList.remove('show','hidden')); }
+    function openPopup(id){ const p=document.getElementById(id);p.classList.remove('hidden');p.classList.add('show'); }
 
-    function closeAllPopups() {
-      document.querySelectorAll('.popup').forEach(p => p.classList.remove('show'));
-      document.querySelectorAll('.popup').forEach(p => p.classList.add('hidden'));
-    }
-
-    function openPopup(id) {
-      const p = document.getElementById(id);
-      p.classList.remove('hidden');
-      p.classList.add('show');
-    }
-
-    function initGame() {
-      const selected = [];
-      while (selected.length < 9) {
-        const idx = Math.floor(Math.random() * images.length);
-        const img = images[idx];
-        if (!selected.includes(img)) selected.push(img);
+    function initGame(){
+      const sel=[];
+      while(sel.length<9){
+        const img=images[Math.floor(Math.random()*images.length)];
+        if(!sel.includes(img)) sel.push(img);
       }
-      const deck = [];
-      selected.forEach(img => deck.push(img, img));
+      const deck=[]; sel.forEach(img=>deck.push(img,img));
       shuffle(deck);
-
-      flippedCards = [];
-      matched = 0;
-      score = 0;
-      streak = 0;
-      misses = 0;
-      document.getElementById("elapsed").textContent = "0";
-      updateStats();
-
-      const board = document.getElementById("game-board");
-      board.innerHTML = "";
-      deck.forEach(img => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.dataset.image = img;
-        card.innerHTML = `
+      flippedCards=[]; matched=0; score=0; streak=0; misses=0;
+      document.getElementById("elapsed").textContent="0"; updateStats();
+      const b=document.getElementById("game-board"); b.innerHTML="";
+      deck.forEach(img=>{
+        const card=document.createElement("div");
+        card.className="card"; card.dataset.image=img;
+        card.innerHTML=`
           <div class="card-inner">
             <div class="front" style="background-image:url('${img}');"></div>
             <div class="back"  style="background-image:url('https://cdn.shopify.com/s/files/1/0593/3731/0342/files/card_back.jpg?v=1744647556');"></div>
           </div>`;
-        card.addEventListener("click", () => flipCard(card));
-        board.appendChild(card);
+        card.addEventListener("click",()=>flipCard(card));
+        b.appendChild(card);
       });
     }
 
-    function startGame() {
-      if (timer) clearInterval(timer);
-      startTime = null;
-      document.getElementById("elapsed").textContent = "0";
+    function startGame(){
+      if(timer) clearInterval(timer);
+      startTime=null; document.getElementById("elapsed").textContent="0";
       closeAllPopups();
       document.getElementById("title-screen").classList.add("hidden");
       document.getElementById("game-container").classList.remove("hidden");
       initGame();
     }
 
-    function flipCard(card) {
-      if (!startTime) {
-        startTime = Date.now();
-        timer = setInterval(() => {
-          document.getElementById("elapsed").textContent =
-            Math.floor((Date.now() - startTime) / 1000);
-        }, 1000);
+    function flipCard(card){
+      if(!startTime){
+        startTime=Date.now();
+        timer=setInterval(()=>{
+          document.getElementById("elapsed").textContent=
+            Math.floor((Date.now()-startTime)/1000);
+        },1000);
       }
-      if (flippedCards.length < 2 && !flippedCards.includes(card)) {
+      if(flippedCards.length<2 && !flippedCards.includes(card)){
         card.classList.add("flipped");
         flippedCards.push(card);
-        if (flippedCards.length === 2) {
-          const [a, b] = flippedCards;
-          if (a.dataset.image === b.dataset.image) {
-            matched++;
-            score += 100 + streak * 25;
-            streak++;
-            flippedCards = [];
+        if(flippedCards.length===2){
+          const [a,b]=flippedCards;
+          if(a.dataset.image===b.dataset.image){
+            matched++; score+=100+streak*25; streak++; flippedCards=[];
             updateStats();
-            if (matched === 9) handleWin();
+            if(matched===9) handleWin();
           } else {
-            streak = 0;
-            misses++;
-            score = Math.max(0, score - 20);
-            setTimeout(() => {
+            streak=0; misses++; score=Math.max(0,score-20);
+            setTimeout(()=>{
               a.classList.remove("flipped");
               b.classList.remove("flipped");
-              flippedCards = [];
-              updateStats();
-            }, 800);
+              flippedCards=[]; updateStats();
+            },800);
           }
         }
       }
     }
 
-    function updateStats() {
-      document.getElementById("score").textContent = score;
-      document.getElementById("streak").textContent = streak;
-      document.getElementById("misses").textContent = misses;
-      document.getElementById("matched").textContent = matched;
+    function updateStats(){
+      document.getElementById("score").textContent=score;
+      document.getElementById("streak").textContent=streak;
+      document.getElementById("misses").textContent=misses;
+      document.getElementById("matched").textContent=matched;
     }
 
-    async function showLeaderboard() {
-      closeAllPopups();
-      openPopup("loading-popup");
-      try {
-        const res = await fetch(LEADERBOARD_URL);
-        const list = await res.json();
-        const best = {};
-        list.forEach(p => {
-          if (!best[p.name] || p.score > best[p.name]) best[p.name] = p.score;
-        });
-        const sorted = Object.entries(best)
-          .sort((a, b) => b[1] - a[1])
-          .map((e, i) => ({ rank: i + 1, name: e[0], score: e[1] }))
-          .slice(0, 10);
+    function showLeaderboard(){
+      closeAllPopups(); openPopup("loading-popup");
+      const old=document.getElementById("jsonp-leaderboard");
+      if(old) old.remove();
+      const s=document.createElement("script");
+      s.id="jsonp-leaderboard";
+      s.src=`${LEADERBOARD_URL}?callback=renderLeaderboard`;
+      document.body.appendChild(s);
+    }
 
-        let html = `<table style="width:100%;border-collapse:collapse;table-layout:fixed"><thead><tr>
+    function renderLeaderboard(list){
+      const best={};
+      list.forEach(p=>{ if(!best[p.name]||p.score>best[p.name]) best[p.name]=p.score; });
+      const sorted=Object.entries(best).sort((a,b)=>b[1]-a[1])
+        .map((e,i)=>({rank:i+1,name:e[0],score:e[1]})).slice(0,10);
+      let html=`<table style="width:100%;border-collapse:collapse;table-layout:fixed">
+        <thead><tr>
           <th style="width:5%"></th>
           <th style="width:15%;text-align:center">Rank</th>
           <th style="width:60%;text-align:left">Name</th>
           <th style="width:20%;text-align:right">Score</th>
         </tr></thead><tbody>`;
-        sorted.forEach(r => {
-          const scoreText =
-            r.name === currentPlayerName ? `${r.score} (you)` : r.score;
-          html += `<tr style="height:2.5rem">
-            <td style="text-align:center">${r.rank === 1 ? "🏆" : ""}</td>
-            <td style="text-align:center">${r.rank}</td>
-            <td style="text-align:left;padding-left:0.5rem">${r.name}</td>
-            <td style="text-align:right;padding-right:0.5rem">${scoreText}</td>
-          </tr>`;
+      sorted.forEach(r=>{
+        const scoreText=(r.name===currentPlayerName)?`${r.score} (you)`:r.score;
+        html+=`<tr style="height:2.5rem">
+          <td style="text-align:center">${r.rank===1?"🏆":""}</td>
+          <td style="text-align:center">${r.rank}</td>
+          <td style="text-align:left;padding-left:0.5rem">${r.name}</td>
+          <td style="text-align:right;padding-right:0.5rem">${scoreText}</td>
+        </tr>`;
+      });
+      html+=`</tbody></table>`;
+      document.getElementById("leaderboard-entries").innerHTML=html;
+      closeAllPopups(); openPopup("leaderboard-popup");
+    }
+
+    async function handleWin(){
+      if(timer) clearInterval(timer);
+      const elapsed=Math.floor((Date.now()-startTime)/1000);
+      document.getElementById("final-score").textContent=score;
+      document.getElementById("final-matches").textContent=matched;
+      document.getElementById("final-streak").textContent=streak;
+      document.getElementById("final-misses").textContent=misses;
+      document.getElementById("final-time").textContent=elapsed;
+      setTimeout(()=>openPopup("win-popup"),1000);
+    }
+
+    function generateNickname(){
+      const a=adjectives[Math.floor(Math.random()*adjectives.length)];
+      const n=nouns[Math.floor(Math.random()*nouns.length)];
+      const num=Math.floor(100+Math.random()*900);
+      document.getElementById("player-name-input").value=`${a}${n}${num}`;
+    }
+
+    async function submitScore(name,score,email,optedIn){
+      currentPlayerName=name;
+      try{
+        await fetch(LEADERBOARD_URL,{
+          method:'POST',mode:'no-cors',
+          body:JSON.stringify({name,score,email,optedIn})
         });
-        html += `</tbody></table>`;
-        document.getElementById("leaderboard-entries").innerHTML = html;
-      } catch {
-        document.getElementById("leaderboard-entries").innerHTML =
-          "<p>Failed to load leaderboard.</p>";
-      } finally {
-        closeAllPopups();
-        openPopup("leaderboard-popup");
+        openPopup("submit-confirmation-popup");
+      }catch(err){
+        console.error("Submission error:",err);
+        document.querySelector("#submit-error-popup p")
+                .textContent="Submission failed. Check your network & try again.";
+        openPopup("submit-error-popup");
       }
     }
 
-   async function handleWin() {
-  clearInterval(timer);
-  const elapsed = Math.floor((Date.now() - startTime) / 1000);
-  document.getElementById("final-score").textContent   = score;
-  document.getElementById("final-matches").textContent = matched;
-  document.getElementById("final-streak").textContent  = streak;
-  document.getElementById("final-misses").textContent  = misses;
-  document.getElementById("final-time").textContent    = elapsed;
-
-  // slight 1 second delay before showing the popup
-  setTimeout(() => openPopup("win-popup"), 1000);
-}
-
-    function generateNickname() {
-      const a = adjectives[Math.floor(Math.random() * adjectives.length)];
-      const n = nouns[Math.floor(Math.random() * nouns.length)];
-      const num = Math.floor(100 + Math.random() * 900);
-      document.getElementById("player-name-input").value = `${a}${n}${num}`;
-    }
-
-async function submitScore(name, score, email, optedIn) {
-  currentPlayerName = name;
-  try {
-    // send as an opaque request—no CORS preflight
-    await fetch(LEADERBOARD_URL, {
-      method: 'POST',
-      mode:   'no-cors',
-      body:   JSON.stringify({ name, score, email, optedIn })
-    });
-    // we assume success
-    openPopup("submit-confirmation-popup");
-  } catch (err) {
-    console.error("Submission error:", err);
-    document
-      .querySelector("#submit-error-popup p")
-      .textContent = `Submission failed. Please check your network or try again.`;
-    openPopup("submit-error-popup");
-  }
-}
-
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("start-button").onclick = startGame;
-      document.getElementById("title-howto").onclick = () =>
-        openPopup("howtoplay-popup");
-      document.getElementById("game-howto").onclick = () =>
-        openPopup("howtoplay-popup");
-      document.getElementById("leaderboard-button").onclick = showLeaderboard;
-      document.getElementById("restart-button").onclick = startGame;
-      document.getElementById("generate-name-button").onclick = generateNickname;
-      document
-        .getElementById("submit-score-button")
-        .onclick = () => {
-          const name = document
-            .getElementById("player-name-input")
-            .value.trim();
-          const email = document
-            .getElementById("player-email-input")
-            .value.trim();
-          const opted = document.getElementById(
-            "optin-checkbox"
-          ).checked;
-          submitScore(name, score, email, opted);
-        };
+    document.addEventListener("DOMContentLoaded",()=>{
+      document.getElementById("start-button").onclick=startGame;
+      document.getElementById("title-howto").onclick=()=>openPopup("howtoplay-popup");
+      document.getElementById("game-howto").onclick=()=>openPopup("howtoplay-popup");
+      document.getElementById("leaderboard-button").onclick=showLeaderboard;
+      document.getElementById("restart-button").onclick=startGame;
+      document.getElementById("generate-name-button").onclick=generateNickname;
+      document.getElementById("submit-score-button").onclick=()=>{
+        const name=document.getElementById("player-name-input").value.trim();
+        const email=document.getElementById("player-email-input").value.trim();
+        const opted=document.getElementById("optin-checkbox").checked;
+        submitScore(name,score,email,opted);
+      };
     });
   </script>
 </body>
